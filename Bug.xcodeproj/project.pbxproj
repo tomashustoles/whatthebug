@@ -170,8 +170,8 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2620;
-				LastUpgradeCheck = 2620;
+				LastSwiftUpdateCheck = 9999;
+				LastUpgradeCheck = 9999;
 				TargetAttributes = {
 					357E6C922F4C587E00DE78FA = {
 						CreatedOnToolsVersion = 26.2;
@@ -400,6 +400,10 @@
 				DEVELOPMENT_TEAM = N38VM65LJJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = WhatTheBug;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSCameraUsageDescription = "WhatTheBug needs camera access to photograph insects for identification.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "WhatTheBug needs photo library access to select insect images for identification.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -432,6 +436,10 @@
 				DEVELOPMENT_TEAM = N38VM65LJJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = WhatTheBug;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSCameraUsageDescription = "WhatTheBug needs camera access to photograph insects for identification.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "WhatTheBug needs photo library access to select insect images for identification.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

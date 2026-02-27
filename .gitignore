@@ -1,0 +1,7 @@
+# API keys - never commit
+Bug/Config.plist
+
+# Xcode
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+DerivedData/

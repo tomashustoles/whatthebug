@@ -1,13 +1,15 @@
 //
-//  ContentView.swift
+//  ScanView.swift
 //  Bug
 //
-//  Bug ID — Home screen with integrated camera view and liquid glass UI
+//  Bug ID — Camera scan screen
 //
 
 import SwiftUI
 
-struct ContentView: View {
+struct ScanView: View {
+    var onInsectCaptured: (CapturedInsect) -> Void = { _ in }
+    
     @State private var viewModel = BugAnalysisViewModel()
     @State private var selectedImage: UIImage?
     @State private var showAnalysisSheet = false
@@ -17,7 +19,6 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // Full-bleed camera view as background
             if cameraService.isAuthorized {
                 LiveCameraPreviewView(session: cameraService.session)
                     .ignoresSafeArea()
@@ -25,7 +26,6 @@ struct ContentView: View {
                 Color.black.ignoresSafeArea()
             }
 
-            // Transparent overlay
             LinearGradient(
                 colors: [
                     Color.black.opacity(0.3),
@@ -38,9 +38,7 @@ struct ContentView: View {
             )
             .ignoresSafeArea()
 
-            // UI layer
             VStack(spacing: 0) {
-                // Title
                 Text("Photograph Insect")
                     .font(.system(size: 28, weight: .heavy))
                     .foregroundStyle(.white)
@@ -50,7 +48,6 @@ struct ContentView: View {
 
                 Spacer()
 
-                // Camera capture square
                 GeometryReader { geo in
                     let size = min(geo.size.width, geo.size.height) * 0.85
                     RoundedRectangle(cornerRadius: 4)
@@ -63,10 +60,8 @@ struct ContentView: View {
 
                 Spacer()
 
-                // Bottom buttons
                 GlassEffectContainer(spacing: 24) {
                     HStack(alignment: .bottom, spacing: 24) {
-                        // Gallery button
                         Button {
                             pickerSourceType = .photoLibrary
                         } label: {
@@ -77,7 +72,6 @@ struct ContentView: View {
                         }
                         .buttonStyle(.plain)
 
-                        // Camera capture button
                         Button {
                             Task { await capturePhoto() }
                         } label: {
@@ -95,12 +89,11 @@ struct ContentView: View {
                         .disabled(isCapturing)
                         .opacity(isCapturing ? 0.6 : 1)
 
-                        // Spacer for balance
                         Color.clear
                             .frame(width: 56, height: 56)
                     }
                     .padding(.horizontal, 32)
-                    .padding(.bottom, 50)
+                    .padding(.bottom, 120)
                 }
             }
         }
@@ -126,8 +119,31 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showAnalysisSheet) {
             if let image = selectedImage {
-                BugAnalysisView(image: image, viewModel: viewModel)
-                    .interactiveDismissDisabled(!viewModel.canDismiss)
+                BugAnalysisView(
+                    image: image,
+                    viewModel: viewModel,
+                    onSaved: { result in
+                        let insect = CapturedInsect(
+                            commonName: result.commonName,
+                            scientificName: result.scientificName,
+                            bugResult: result
+                        )
+                        if let path = InsectStore.saveImage(image, id: insect.id) {
+                            let withImage = CapturedInsect(
+                                id: insect.id,
+                                commonName: insect.commonName,
+                                scientificName: insect.scientificName,
+                                capturedAt: insect.capturedAt,
+                                imagePath: path,
+                                bugResult: result
+                            )
+                            onInsectCaptured(withImage)
+                        } else {
+                            onInsectCaptured(insect)
+                        }
+                    }
+                )
+                .interactiveDismissDisabled(!viewModel.canDismiss)
             }
         }
         .onChange(of: showAnalysisSheet) { _, isPresented in
@@ -166,17 +182,4 @@ struct ContentView: View {
             showAnalysisSheet = true
         }
     }
-}
-
-extension CameraPickerView.SourceType: Identifiable {
-    public var id: Int {
-        switch self {
-        case .camera: return 0
-        case .photoLibrary: return 1
-        }
-    }
-}
-
-#Preview {
-    ContentView()
 }

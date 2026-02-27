@@ -2,7 +2,7 @@
 //  BugApp.swift
 //  Bug
 //
-//  Created by Tomas Hustoles on 23/2/26.
+//  WhatTheBug — Main app entry point
 //
 
 import SwiftUI
@@ -11,7 +11,7 @@ import SwiftUI
 struct BugApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
         }
     }
 }
