@@ -14,21 +14,16 @@ struct GeographicDistributionCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 8) {
-                Text("🌍")
-                    .font(.system(size: 18))
-                
-                Text("COMMON LOCATIONS")
-                    .font(.system(size: 13, weight: .heavy, design: .default))
-                    .foregroundStyle(Color(hex: "#3B82F6"))
-                    .tracking(1.2)
-            }
+            Text("COMMON LOCATIONS")
+                .font(.system(size: 13, weight: .heavy, design: .default))
+                .foregroundStyle(Color(hex: "#666666"))
+                .tracking(1.2)
             
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(countries, id: \.self) { country in
                     HStack(spacing: 12) {
                         Circle()
-                            .fill(Color(hex: "#3B82F6"))
+                            .fill(Color(hex: "#666666"))
                             .frame(width: 6, height: 6)
                         
                         Text(country)
@@ -60,23 +55,17 @@ struct EncounterResponseCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Title
-            HStack(spacing: 8) {
-                Text("👁️")
-                    .font(.system(size: 18))
-                
-                Text("WHAT TO DO WHEN YOU SEE THEM")
-                    .font(.system(size: 13, weight: .heavy, design: .default))
-                    .foregroundStyle(.white)
-                    .tracking(1.2)
-            }
-            .padding(20)
-            .padding(.bottom, 4)
+            Text("WHAT TO DO WHEN YOU SEE THEM")
+                .font(.system(size: 13, weight: .heavy, design: .default))
+                .foregroundStyle(Color(hex: "#666666"))
+                .tracking(1.2)
+                .padding(20)
+                .padding(.bottom, 4)
             
             // One
             encounterSection(
                 title: "IF YOU SEE ONE",
                 text: singleEncounter,
-                color: Color(hex: "#22C55E"),
                 isFirst: true
             )
             
@@ -86,8 +75,7 @@ struct EncounterResponseCard: View {
             // Few (2-5)
             encounterSection(
                 title: "IF YOU SEE A FEW (2-5)",
-                text: fewEncounters,
-                color: Color(hex: "#F59E0B")
+                text: fewEncounters
             )
             
             Divider()
@@ -97,8 +85,6 @@ struct EncounterResponseCard: View {
             encounterSection(
                 title: "IF YOU SEE MANY (INFESTATION)",
                 text: manyEncounters,
-                color: Color(hex: "#EF4444"),
-                icon: "⚠️",
                 isLast: true
             )
         }
@@ -113,23 +99,14 @@ struct EncounterResponseCard: View {
     private func encounterSection(
         title: String,
         text: String,
-        color: Color,
-        icon: String? = nil,
         isFirst: Bool = false,
         isLast: Bool = false
     ) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                if let icon = icon {
-                    Text(icon)
-                        .font(.system(size: 16))
-                }
-                
-                Text(title)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(color)
-                    .tracking(1.0)
-            }
+            Text(title)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(hex: "#666666"))
+                .tracking(1.0)
             
             Text(text)
                 .font(.system(size: 15, weight: .medium))
@@ -153,15 +130,10 @@ struct EliminationStrategyCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 8) {
-                Text(icon)
-                    .font(.system(size: 18))
-                
-                Text(title)
-                    .font(.system(size: 13, weight: .heavy, design: .default))
-                    .foregroundStyle(accentColor)
-                    .tracking(1.2)
-            }
+            Text(title)
+                .font(.system(size: 13, weight: .heavy, design: .default))
+                .foregroundStyle(Color(hex: "#666666"))
+                .tracking(1.2)
             
             Text(text)
                 .font(.system(size: 15, weight: .medium))
@@ -190,15 +162,10 @@ struct ExpertTipsCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 8) {
-                Text(icon)
-                    .font(.system(size: 18))
-                
-                Text(title)
-                    .font(.system(size: 13, weight: .heavy, design: .default))
-                    .foregroundStyle(accentColor)
-                    .tracking(1.2)
-            }
+            Text(title)
+                .font(.system(size: 13, weight: .heavy, design: .default))
+                .foregroundStyle(Color(hex: "#666666"))
+                .tracking(1.2)
             
             Text(text)
                 .font(.system(size: 15, weight: .medium))

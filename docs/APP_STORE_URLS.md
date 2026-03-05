@@ -35,4 +35,4 @@ If your repo is `https://github.com/johndoe/whatthebug`, then:
 
 ## Update support email
 
-Edit `docs/support.html` and replace `support@whatthebug.app` with your real support email if different.
+The support email in `docs/support.html` is set to `me@tomashustoles.cz`. Edit if different.

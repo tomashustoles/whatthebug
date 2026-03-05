@@ -19,6 +19,35 @@
 - Moved paywall to be presented as a `.sheet()` modifier
 - Passed `currentBugResult` to the paywall so it knows which insect to unlock
 
+### 3. One-Time Scan Credit Not Unlocking Content ⚠️ **CRITICAL FIX**
+**Problem:** When a user purchased a one-time scan credit and used it to scan an insect, the credit was deducted but the insect information remained locked.
+
+**Solution:**
+- Added `usedScanCredit` state variable in `ScanView` to track when a **PAID** credit is used
+- When analysis completes successfully via `onSaved` callback, automatically unlock the insect if a **PAID** credit was used
+- **IMPORTANT:** Free daily scans do NOT trigger auto-unlock (only paid credits and Pro subscription)
+- This ensures users get access to the content they paid for immediately after scanning
+
+## CRITICAL: Free vs Paid Scans
+
+### ❌ Free Daily Scans (3 per day)
+- **Do NOT unlock premium content**
+- User sees only: PEST status, DANGER level
+- Premium sections show as locked cards
+- `usedScanCredit = false` → No auto-unlock
+
+### ✅ Paid Scan Credits ("ONE SCAN")
+- **DO unlock premium content automatically**
+- User paid for this specific insect
+- All premium sections immediately visible
+- `usedScanCredit = true` → Auto-unlock triggered
+- Unlock is permanent (saved in UserDefaults)
+
+### ✅ Pro Subscription ("UNLIMITED")
+- **All insects unlocked automatically**
+- `hasAccessToPremiumContent = true` (because isPro)
+- No credits consumed
+
 ## Changes Made to `BugAnalysisView.swift`
 
 ### 1. Added State Variables
@@ -115,3 +144,4 @@ private func unlockButton() -> some View {
 - [ ] Close paywall without purchasing → Returns to sheet, content still locked
 - [ ] View a previously unlocked insect → Premium content shows immediately
 - [ ] View insect with active subscription → Premium content shows immediately
+

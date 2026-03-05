@@ -44,13 +44,35 @@ final class BugAnalysisViewModel {
     }
 
     func analyze(image: UIImage) async {
+        print("[BugAnalysisViewModel] Starting analysis...")
         state = .loading
+        
         do {
             let result = try await visionService.analyzeImage(image)
+            
+            // Check if task was cancelled before setting success
+            try Task.checkCancellation()
+            
+            print("[BugAnalysisViewModel] Analysis successful: \(result.commonName)")
             state = .success(result)
+            
+        } catch is CancellationError {
+            // Don't set error state on cancellation - view is being dismissed
+            print("[BugAnalysisViewModel] Task was cancelled - ignoring")
+            return
+            
         } catch let error as OpenAIVisionError {
+            print("[BugAnalysisViewModel] OpenAI error: \(error.localizedDescription)")
             state = .error(error.localizedDescription)
+            
         } catch {
+            // Check if this is actually a cancellation error with a different type
+            if error.localizedDescription.contains("cancelled") || error.localizedDescription.contains("canceled") {
+                print("[BugAnalysisViewModel] Detected cancellation via error message - ignoring")
+                return
+            }
+            
+            print("[BugAnalysisViewModel] Unexpected error: \(error.localizedDescription)")
             state = .error(error.localizedDescription)
         }
     }

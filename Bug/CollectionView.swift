@@ -91,32 +91,37 @@ private struct InsectCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Group {
-                if let path = insect.imagePath,
-                   let uiImage = UIImage(contentsOfFile: path) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Rectangle()
-                        .fill(Color(white: 0.15))
-                        .overlay {
-                            Image(systemName: "ant.fill")
-                                .font(.system(size: 32))
-                                .foregroundStyle(.tertiary)
-                        }
+            // Square image with 1:1 aspect ratio
+            GeometryReader { geometry in
+                Group {
+                    if let path = insect.imagePath,
+                       let uiImage = UIImage(contentsOfFile: path) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: geometry.size.width, height: geometry.size.width)
+                            .clipped()
+                    } else {
+                        Rectangle()
+                            .fill(Color(white: 0.15))
+                            .frame(width: geometry.size.width, height: geometry.size.width)
+                            .overlay {
+                                Image(systemName: "ant.fill")
+                                    .font(.system(size: 32))
+                                    .foregroundStyle(.tertiary)
+                            }
+                    }
                 }
-            }
-            .frame(height: 140)
-            .clipped()
-            .clipShape(
-                UnevenRoundedRectangle(
-                    topLeadingRadius: 14,
-                    bottomLeadingRadius: 0,
-                    bottomTrailingRadius: 0,
-                    topTrailingRadius: 14
+                .clipShape(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: 14,
+                        bottomLeadingRadius: 0,
+                        bottomTrailingRadius: 0,
+                        topTrailingRadius: 14
+                    )
                 )
-            )
+            }
+            .aspectRatio(1, contentMode: .fit)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(insect.commonName)

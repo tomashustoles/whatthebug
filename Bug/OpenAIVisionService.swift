@@ -53,14 +53,29 @@ final class OpenAIVisionService {
         {
           "common_name": "string - common name of the insect",
           "scientific_name": "string - binomial nomenclature",
-          "habitat": "string - where it typically lives",
+          "habitat": "string - where it typically lives (brief, 2-4 words)",
           "life_stage": "string - e.g. adult, larva, nymph, egg",
           "is_pest": true or false,
-          "danger_level": "HIGH" or "MEDIUM" or "LOW",
+          "danger_level": "SAFE" or "MILD" or "DANGEROUS" or "DEADLY",
           "danger_description": "string - brief safety/relevance description",
-          "how_to_find": "string - paragraph on how to locate this species",
-          "how_to_eliminate": "string - paragraph on removal/control if pest, or 'N/A' if beneficial"
+          "how_to_find": "string - paragraph on how to locate this species in the wild",
+          "how_to_eliminate": "string - general paragraph on removal/control if pest, or 'N/A' if beneficial",
+          
+          "common_countries": ["array of 3-6 countries where this species is most commonly found"],
+          "seasonal_activity": "string - when it's most active (e.g., 'Year-round in warm climates' or 'Summer months, May-September')",
+          
+          "what_to_do_single": "string - paragraph: advice when you see ONE of these (observe, ignore, relocate, etc.)",
+          "what_to_do_few": "string - paragraph: response when you see 2-5 of these (inspect for nests, monitor areas, light prevention)",
+          "what_to_do_many": "string - paragraph: urgent action plan for infestation/large numbers (professional help, immediate steps)",
+          
+          "short_term_elimination": "string - paragraph: immediate 24-48 hour solutions (sprays, traps, quick fixes)",
+          "long_term_elimination": "string - paragraph: permanent prevention strategies (habitat modification, sealing entry points, ongoing maintenance)",
+          
+          "pro_tips": "string - paragraph: professional entomologist advice and lesser-known facts about identification or behavior",
+          "community_wisdom": "string - paragraph: practical tips and experiences from homeowners and Reddit communities (real-world solutions that work)"
         }
+        
+        Be thorough and practical. For beneficial insects, emphasize coexistence and relocation over elimination.
         """
 
         let userPrompt = "Identify this insect and return the JSON object as specified."
@@ -82,7 +97,7 @@ final class OpenAIVisionService {
                     ]
                 ]
             ],
-            "max_tokens": 1024,
+            "max_tokens": 2048,
             "response_format": ["type": "json_object"]
         ]
 

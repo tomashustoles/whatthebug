@@ -141,9 +141,42 @@ This update implements daily scan limits for free users, adds privacy/support li
 1. ✓ `ScanLimitManager.swift` (NEW)
 2. ✓ `ProfileView.swift` (MODIFIED)
 3. ✓ `ScanView.swift` (MODIFIED)
+4. ✓ `BugAnalysisView.swift` (MODIFIED - Fix for analysis sheet issues)
+5. ✓ `BugAnalysisViewModel.swift` (MODIFIED - Fix for cancellation handling)
 
 ## Dependencies
 - Foundation (Date, Calendar, UserDefaults)
 - SwiftUI (all UI components)
 - StoreKit (PurchaseManager integration)
 - Liquid Glass APIs (glassEffect, GlassEffectContainer)
+---
+
+## Critical Bug Fixes (Added Later)
+
+### Fix 1: Images Not Displaying in Collection
+**Problem**: After app rebuild, insects appeared without photos (placeholder icons only)
+
+**Solution**:
+- Added path migration logic in `InsectStore.load()`
+- iOS sandbox changes container path on rebuild, but files remain
+- Now automatically detects and fixes invalid paths using filename
+- Added debug logging to track migrations
+
+### Fix 2: "IDENTIFICATION FAILED cancelled" Error
+**Problem**: Analysis sheet showed "cancelled" error, then data appeared after tapping
+
+**Solution**:
+- Create fresh `BugAnalysisViewModel` for each analysis (not reused)
+- Added 0.1s delay for sheet presentation animation
+- Improved cancellation error handling to not show in UI
+- Better task lifecycle management with explicit cleanup
+- Added debug logging throughout analysis flow
+
+**Result**: 
+- ✅ Images load correctly after rebuilds
+- ✅ No more confusing "cancelled" errors  
+- ✅ Smooth loading → success transitions
+- ✅ Better resource management
+**See `CRITICAL_FIXES.md` for detailed technical explanation.**
+
+

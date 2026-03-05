@@ -4,4 +4,7 @@
    <FileRef
       location = "self:">
    </FileRef>
+   <FileRef
+      location = "group:CREATE_STOREKIT_IN_XCODE.md">
+   </FileRef>
 </Workspace>

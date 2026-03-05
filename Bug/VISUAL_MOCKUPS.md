@@ -281,6 +281,26 @@
 
 ---
 
+## 🎨 Component Design Updates
+
+### Typography Changes (Updated!)
+
+**Common Name (Bug Name)**
+- Style: `.capitalized` - Only first letter of each word capitalized
+- Font: 36pt, black weight, default design
+- Example: "House Fly" (not "HOUSE FLY" or "house fly")
+- Line spacing: -4pt (tight)
+- Color: White (#FFFFFF)
+
+**Scientific Name (Latin Name)**  
+- Style: `.uppercase` - All caps
+- Font: 11pt, **regular weight** (not italic)
+- Example: "MUSCA DOMESTICA"
+- Tracking: 1.2pt
+- Color: Dim gray (#888888)
+
+---
+
 ## 📐 Component Specifications
 
 ### Geographic Distribution Card
@@ -523,7 +543,8 @@ Horizontal Spacing:
 └─ Text margins: Respects card padding
 
 Typography Line Heights:
-├─ Bug name (36pt): Line spacing -4pt (tight)
+├─ Bug name (36pt): Capitalized, line spacing -4pt (tight)
+├─ Latin name (11pt): Regular weight (not italic), uppercase, tracking 1.2
 ├─ Body text (15pt): Line spacing 4pt
 ├─ Labels (11pt): Tracking 1.0-1.2
 └─ Headers (13pt): Tracking 1.2

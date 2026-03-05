@@ -27,6 +27,7 @@ struct MainTabView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .statusBarHidden(true)
     }
 }
 

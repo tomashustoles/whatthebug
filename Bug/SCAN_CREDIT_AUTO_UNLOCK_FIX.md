@@ -14,6 +14,25 @@ When a user purchased a one-time scan credit and used it to scan an insect:
 
 The scan credit was consumed but the insect was never marked as unlocked in `OneTimeUnlockManager`.
 
+## Important: Free Scans vs Paid Scans
+
+### Free Daily Scans (3 per day)
+- ❌ **Do NOT unlock premium content**
+- User sees only: PEST status, DANGER level
+- Premium sections remain locked (paywall shows)
+- Content can be unlocked later via purchase
+
+### Paid Scan Credits ("ONE SCAN" purchase)
+- ✅ **DO unlock premium content automatically**
+- User paid for this specific insect
+- All premium sections visible immediately
+- Unlock is permanent (saved forever)
+
+### Pro Subscription ("UNLIMITED")
+- ✅ **All insects unlocked automatically**
+- No credits needed
+- Unlimited scans, all content visible
+
 ## The Solution
 
 Track when a scan credit is used and automatically unlock the insect when analysis succeeds:
@@ -45,16 +64,27 @@ In both camera capture and photo library flows:
 // When photo is taken/selected
 if !purchaseManager.isPro {
     if scanLimitManager.canScan(isPro: false) {
-        // Using free daily scan
+        // Using FREE daily scan (1/3, 2/3, or 3/3)
         scanLimitManager.incrementScanCount()
-        usedScanCredit = false  ✅ No credit used
+        usedScanCredit = false  // ❌ Free scan - NO auto-unlock
+        print("[ScanView] Used free daily scan")
     } else {
-        // Using scan credit
+        // Using PAID scan credit (after free scans exhausted)
         let creditUsed = oneTimeUnlockManager.useScanCredit()
-        usedScanCredit = creditUsed  ✅ Mark that credit was used
+        usedScanCredit = creditUsed  // ✅ Paid credit - WILL auto-unlock
+        print("[ScanView] Used PAID scan credit: \(creditUsed)")
     }
+} else {
+    // Pro subscriber - unlimited scans, no credits needed
+    usedScanCredit = false  // No credit used (subscription covers it)
+    print("[ScanView] Pro user - unlimited access")
 }
 ```
+
+**Key Logic:**
+- `scanLimitManager.canScan()` returns `true` → User has free scans left → Set `usedScanCredit = false`
+- `scanLimitManager.canScan()` returns `false` → No free scans → Use paid credit → Set `usedScanCredit = true`
+- This ensures **only paid scans trigger auto-unlock**, not free scans
 
 ### Step 3: Auto-Unlock on Success
 In the `onSaved` callback (triggered when analysis completes):
@@ -129,17 +159,41 @@ Users understand what they're buying:
 
 ## Testing Scenarios
 
-### Scenario 1: Fresh User with Credit
+### Scenario 1: Free Daily Scan (Should NOT Unlock)
 ```
 1. New user opens app (3 free scans, 0 credits)
-2. Purchases "ONE SCAN" from profile → availableScanCredits = 1
-3. Uses all 3 free scans → scansRemaining = 0
-4. Takes 4th photo → usedScanCredit = true (credit consumed)
-5. Analysis completes → Insect auto-unlocked
-6. Views result → Premium content visible ✅
+2. Takes photo #1 → usedScanCredit = false (free scan)
+3. Analysis completes → NO auto-unlock (onSaved skips unlock)
+4. Views result → Premium content LOCKED ✅
+5. User can unlock by:
+   - Buying "ONE SCAN" for this insect
+   - Subscribing to "UNLIMITED"
 ```
 
-### Scenario 2: Re-viewing Unlocked Insect
+### Scenario 2: Paid Scan Credit (Should Auto-Unlock)
+```
+1. User has used all 3 free scans (scansRemaining = 0)
+2. Purchases "ONE SCAN" from profile → availableScanCredits = 1
+3. Takes photo #4 → usedScanCredit = true (paid credit consumed)
+4. Analysis completes → Insect auto-unlocked ✅
+5. Views result → Premium content VISIBLE ✅
+6. Re-opens from collection → Still unlocked ✅
+```
+
+### Scenario 3: Mix of Free and Paid Scans
+```
+1. New user: 3 free scans, 0 credits
+2. Scan #1 (free) → Content locked ❌
+3. Scan #2 (free) → Content locked ❌
+4. Scan #3 (free) → Content locked ❌
+5. Buys 2x "ONE SCAN" → availableScanCredits = 2
+6. Scan #4 (paid credit) → Content unlocked ✅
+7. Scan #5 (paid credit) → Content unlocked ✅
+8. Next day: 3 free scans reset
+9. Scan #6 (free) → Content locked ❌
+```
+
+### Scenario 4: Re-viewing Unlocked Insect
 ```
 1. User has previously unlocked "Ladybug" via scan credit
 2. Opens Collection → Taps "Ladybug"
@@ -153,9 +207,10 @@ Users understand what they're buying:
 2. Takes photo → usedScanCredit = false (subscription covers it)
 3. Analysis completes → No auto-unlock needed
 4. hasAccessToPremiumContent returns true anyway (isPro) ✅
+5. All content visible regardless of unlock status ✅
 ```
 
-### Scenario 4: Multiple Credits
+### Scenario 5: Multiple Paid Credits
 ```
 1. User buys 3x "ONE SCAN" → availableScanCredits = 3
 2. Scans Bug A → Credit used, auto-unlocked ✅
@@ -200,7 +255,25 @@ Users understand what they're buying:
 
 ## Summary
 
-This fix ensures that when users purchase and consume a one-time scan credit, they immediately get access to the premium content for that insect—no additional steps required. The unlock is permanent and persists across app sessions.
+This fix ensures that when users purchase and consume a **paid** one-time scan credit, they immediately get access to the premium content for that insect—no additional steps required. The unlock is permanent and persists across app sessions.
 
-**Before:** Scan credit consumed → Content locked → User confused  
-**After:** Scan credit consumed → Content unlocked → User happy 🎉
+**CRITICAL:** Free daily scans do NOT unlock premium content. Only paid scan credits and Pro subscriptions unlock content.
+### Content Access Matrix
+
+| Scan Type | Content Unlocked? | User Pays? |
+|-----------|------------------|------------|
+| Free daily scan (1-3) | ❌ NO | ❌ Free |
+| Paid scan credit | ✅ YES (forever) | ✅ $X per scan |
+| Pro subscription | ✅ YES (all insects) | ✅ $X/month |
+
+**Before Fix:**
+- Free scans → Content locked ✅ (correct)
+- Paid credit → Content locked ❌ (bug!)
+- Pro subscription → Content unlocked ✅ (correct)
+
+**After Fix:**
+- Free scans → Content locked ✅ (correct)
+- Paid credit → Content unlocked ✅ (fixed!)
+- Pro subscription → Content unlocked ✅ (correct)
+
+

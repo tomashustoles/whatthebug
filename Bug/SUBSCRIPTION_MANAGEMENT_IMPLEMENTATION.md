@@ -18,6 +18,17 @@ The Pro subscription management has been fully implemented in the ProfileView. U
 - `@State private var showingPaywall = false` - Controls the paywall sheet presentation
 - `@Environment(\.openURL) private var openURL` - Provides URL opening capability for fallback
 
+#### Added Window Scene Helper
+Added a computed property to get the current window scene (required for StoreKit):
+```swift
+private var windowScene: UIWindowScene? {
+    guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+        return nil
+    }
+    return scene
+}
+```
+
 #### Updated Subscription Button Action
 The "Manage"/"Subscribe" button now has full functionality:
 
@@ -27,7 +38,14 @@ Button {
         // Open subscription management in App Store
         Task {
             do {
-                try await AppStore.showManageSubscriptions(in: nil)
+                if let windowScene = windowScene {
+                    try await AppStore.showManageSubscriptions(in: windowScene)
+                } else {
+                    // Fallback if no window scene available
+                    if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                        openURL(url)
+                    }
+                }
             } catch {
                 // Fallback to opening subscription management URL
                 if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
@@ -65,13 +83,35 @@ Added a convenience method to show subscription management:
 ```swift
 // MARK: - Manage Subscriptions
 
-func showManageSubscriptions() async throws {
+func showManageSubscriptions(in windowScene: UIWindowScene?) async throws {
     // Opens the App Store's subscription management interface
-    try await AppStore.showManageSubscriptions(in: nil)
+    guard let scene = windowScene else {
+        throw PurchaseError.noWindowScene
+    }
+    try await AppStore.showManageSubscriptions(in: scene)
 }
 ```
 
 This method can be called from anywhere in the app to open subscription management.
+
+#### Added Error Case
+Extended `PurchaseError` enum with a new case:
+
+```swift
+enum PurchaseError: LocalizedError {
+    case failedVerification
+    case noWindowScene  // New case
+    
+    var errorDescription: String? {
+        switch self {
+        case .failedVerification:
+            return "Purchase verification failed"
+        case .noWindowScene:
+            return "Unable to present subscription management"
+        }
+    }
+}
+```
 
 ## How It Works
 
@@ -104,12 +144,22 @@ This method can be called from anywhere in the app to open subscription manageme
 ### AppStore.showManageSubscriptions(in:)
 - **Available**: iOS 15.0+
 - **Function**: Opens the system subscription management interface
-- **Parameter**: Optional window scene (passing `nil` uses the current scene)
+- **Parameter**: Required `UIWindowScene` - the window scene in which to present the interface
 - **Benefits**:
   - Native Apple interface (trusted by users)
   - Handles all subscription management automatically
   - No need to implement custom UI for management
   - Automatically syncs with App Store Connect
+
+**Important**: The `windowScene` parameter is required (not optional). The ProfileView includes a computed property to get the current window scene:
+```swift
+private var windowScene: UIWindowScene? {
+    guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+        return nil
+    }
+    return scene
+}
+```
 
 ### Transaction Management
 - The `PurchaseManager` listens for transaction updates

@@ -7,6 +7,7 @@
 
 import Foundation
 import StoreKit
+import Combine
 
 @MainActor
 final class PurchaseManager: ObservableObject {
@@ -19,8 +20,10 @@ final class PurchaseManager: ObservableObject {
     private var updateListenerTask: Task<Void, Never>?
     
     private init() {
+        print("[PurchaseManager] Initializing...")
         // Load cached state immediately
         isPro = UserDefaults.standard.bool(forKey: "isPro")
+        print("[PurchaseManager] Cached isPro status: \(isPro)")
         
         updateListenerTask = listenForTransactions()
         
@@ -37,20 +40,33 @@ final class PurchaseManager: ObservableObject {
     // MARK: - Products
     
     func loadProducts() async {
+        print("[PurchaseManager] Loading products for IDs: \(Configuration.productIDs)")
         do {
             let loadedProducts = try await Product.products(for: Configuration.productIDs)
             products = loadedProducts.sorted { $0.price < $1.price }
+            print("[PurchaseManager] Successfully loaded \(products.count) products:")
+            for product in products {
+                print("  - \(product.displayName) (\(product.id)) - \(product.displayPrice)")
+            }
         } catch {
-            print("Failed to load products: \(error)")
+            print("[PurchaseManager] Failed to load products: \(error)")
         }
     }
     
     var oneTimePurchaseProduct: Product? {
-        products.first { $0.id == Configuration.oneTimePurchaseProductID }
+        let product = products.first { $0.id == Configuration.oneTimePurchaseProductID }
+        if product == nil {
+            print("[PurchaseManager] ⚠️ One-time purchase product not found for ID: \(Configuration.oneTimePurchaseProductID)")
+        }
+        return product
     }
     
     var subscriptionProduct: Product? {
-        products.first { $0.id == Configuration.subscriptionProductID }
+        let product = products.first { $0.id == Configuration.subscriptionProductID }
+        if product == nil {
+            print("[PurchaseManager] ⚠️ Subscription product not found for ID: \(Configuration.subscriptionProductID)")
+        }
+        return product
     }
     
     // MARK: - Purchase
@@ -86,7 +102,21 @@ final class PurchaseManager: ObservableObject {
         }
     }
     
+    // MARK: - Manage Subscriptions
+    
+    func showManageSubscriptions(in windowScene: UIWindowScene?) async throws {
+        // Opens the App Store's subscription management interface
+        guard let scene = windowScene else {
+            throw PurchaseError.noWindowScene
+        }
+        try await AppStore.showManageSubscriptions(in: scene)
+    }
+    
     // MARK: - Entitlements
+    
+    var hasActiveOneTimeUnlock: Bool {
+        return purchasedProductIDs.contains(Configuration.oneTimePurchaseProductID)
+    }
     
     private func updatePurchasedProducts() async {
         var purchasedIDs: Set<String> = []
@@ -102,14 +132,15 @@ final class PurchaseManager: ObservableObject {
         
         self.purchasedProductIDs = purchasedIDs
         
-        // Update pro status
-        let hasOneTimePurchase = purchasedIDs.contains(Configuration.oneTimePurchaseProductID)
+        // Update pro status - ONLY subscription gives Pro mode
         let hasSubscription = purchasedIDs.contains(Configuration.subscriptionProductID)
         
-        isPro = hasOneTimePurchase || hasSubscription
+        isPro = hasSubscription
         
         // Cache the status
         UserDefaults.standard.set(isPro, forKey: "isPro")
+        
+        print("[PurchaseManager] Updated entitlements - isPro: \(isPro), purchased: \(purchasedIDs)")
     }
     
     // MARK: - Transaction Listener
@@ -117,17 +148,18 @@ final class PurchaseManager: ObservableObject {
     private func listenForTransactions() -> Task<Void, Never> {
         Task.detached { [weak self] in
             for await result in Transaction.updates {
-                guard let transaction = try? self?.checkVerified(result) else {
+                guard let self = self else { continue }
+                guard let transaction = try? self.checkVerified(result) else {
                     continue
                 }
                 
-                await self?.updatePurchasedProducts()
+                await self.updatePurchasedProducts()
                 await transaction.finish()
             }
         }
     }
     
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+    private nonisolated func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified:
             throw PurchaseError.failedVerification
@@ -139,11 +171,14 @@ final class PurchaseManager: ObservableObject {
 
 enum PurchaseError: LocalizedError {
     case failedVerification
+    case noWindowScene
     
     var errorDescription: String? {
         switch self {
         case .failedVerification:
             return "Purchase verification failed"
+        case .noWindowScene:
+            return "Unable to present subscription management"
         }
     }
 }

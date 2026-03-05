@@ -131,9 +131,16 @@ struct ContentView: View {
             }
         }
         .onChange(of: showAnalysisSheet) { _, isPresented in
-            if !isPresented {
+            if isPresented {
+                // Stop camera when analysis sheet opens
+                cameraService.stopSession()
+            } else {
+                // Restart camera when analysis sheet closes
                 selectedImage = nil
                 viewModel.reset()
+                Task {
+                    await cameraService.configure()
+                }
             }
         }
         .overlay {

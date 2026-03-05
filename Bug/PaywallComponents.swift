@@ -105,49 +105,55 @@ struct PremiumParagraphCard: View {
 
 struct LockedContentCard: View {
     let title: String
+    var onTap: (() -> Void)? = nil
     
     var body: some View {
-        ZStack {
-            // Blurred content preview
-            VStack(alignment: .leading, spacing: 8) {
-                Text(title)
-                    .font(.system(size: 11, weight: .semibold))
-                    .textCase(.uppercase)
-                    .tracking(1)
-                    .foregroundStyle(Color(hex: "#666666"))
+        Button {
+            onTap?()
+        } label: {
+            ZStack {
+                // Blurred content preview
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(title)
+                        .font(.system(size: 11, weight: .semibold))
+                        .textCase(.uppercase)
+                        .tracking(1)
+                        .foregroundStyle(Color(hex: "#666666"))
+                    
+                    Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.white)
+                        .lineSpacing(4)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .blur(radius: 6)
                 
-                Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.white)
-                    .lineSpacing(4)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .blur(radius: 6)
-            
-            // Black overlay
-            Color.black.opacity(0.65)
-            
-            // Lock icon and "Pro Only" label
-            VStack(spacing: 8) {
-                Image(systemName: "lock.fill")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.white)
+                // Black overlay
+                Color.black.opacity(0.65)
                 
-                Text("PRO ONLY")
-                    .font(.system(size: 10, weight: .bold))
-                    .tracking(1.2)
-                    .textCase(.uppercase)
-                    .foregroundStyle(Color(hex: "#888888"))
+                // Lock icon and "Pro Only" label
+                VStack(spacing: 8) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(.white)
+                    
+                    Text("PRO ONLY")
+                        .font(.system(size: 10, weight: .bold))
+                        .tracking(1.2)
+                        .textCase(.uppercase)
+                        .foregroundStyle(Color(hex: "#888888"))
+                }
             }
+            .background(Color(hex: "#111111"))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color(hex: "#222222"), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .frame(height: 120)
         }
-        .background(Color(hex: "#111111"))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(hex: "#222222"), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .frame(height: 120)
+        .buttonStyle(.plain)
     }
 }
 
@@ -179,9 +185,12 @@ struct ProBadge: View {
 
 struct PaywallView: View {
     @ObservedObject var purchaseManager: PurchaseManager
-    @State private var selectedProductType: ProductType = .oneTime
+    var currentBugResult: BugResult? = nil  // Pass the current bug for one-time unlocks
+    @State private var selectedProductType: ProductType = .subscription
     @State private var isPurchasing = false
     @State private var errorMessage: String?
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     
     enum ProductType {
         case oneTime
@@ -189,92 +198,197 @@ struct PaywallView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Section title
-            Text("UNLOCK FULL REPORT")
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(1.2)
-                .textCase(.uppercase)
-                .foregroundStyle(Color(hex: "#888888"))
+        ZStack {
+            // Black background
+            Color.black.ignoresSafeArea()
             
-            // Two option cards
-            HStack(spacing: 12) {
-                // Card A - One-time purchase
-                if let product = purchaseManager.oneTimePurchaseProduct {
-                    PurchaseOptionCard(
-                        badge: "THIS BUG",
-                        price: product.displayPrice,
-                        label: "One scan",
-                        isSelected: selectedProductType == .oneTime
-                    ) {
-                        selectedProductType = .oneTime
-                    }
-                }
-                
-                // Card B - Subscription
-                if let product = purchaseManager.subscriptionProduct {
-                    PurchaseOptionCard(
-                        badge: "ALL BUGS",
-                        price: "\(product.displayPrice)/mo",
-                        label: "Unlimited",
-                        isSelected: selectedProductType == .subscription
-                    ) {
-                        selectedProductType = .subscription
-                    }
-                }
-            }
-            
-            // Error message
-            if let error = errorMessage {
-                Text(error)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Color(hex: "#EF4444"))
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-            }
-            
-            // Unlock button
-            Button {
-                Task { await purchase() }
-            } label: {
+            // Content
+            VStack(spacing: 0) {
+                // Close button
                 HStack {
-                    if isPurchasing {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .black))
-                    } else {
-                        Text("Unlock Now")
-                            .font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(.black)
+                    Spacer()
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 36, height: 36)
+                            .background(Color(white: 0.25))
+                            .clipShape(Circle())
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 54)
-                .background(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 32) {
+                        // Icon and headline
+                        VStack(alignment: .leading, spacing: 16) {
+                            // Sparkle icon
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 48, weight: .regular))
+                                .foregroundStyle(.white)
+                            
+                            // Headline
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Unlock")
+                                    .font(.system(size: 42, weight: .bold))
+                                    .foregroundStyle(.white)
+                                
+                                Text("Full Insect Details")
+                                    .font(.system(size: 42, weight: .bold))
+                                    .foregroundStyle(.white)
+                            }
+                            
+                            // Subtitle
+                            Text("Get complete information about every insect")
+                                .font(.system(size: 17, weight: .regular))
+                                .foregroundStyle(Color(white: 0.6))
+                        }
+                        .padding(.top, 8)
+                        
+                        // Features list
+                        VStack(alignment: .leading, spacing: 24) {
+                            FeatureRow(
+                                icon: "infinity",
+                                title: "Unlimited Scans",
+                                subtitle: "Identify as many insects as you want"
+                            )
+                            
+                            FeatureRow(
+                                icon: "doc.text.fill",
+                                title: "Complete Reports",
+                                subtitle: "Access full details for every insect"
+                            )
+                            
+                            FeatureRow(
+                                icon: "shield.checkered",
+                                title: "Safety Information",
+                                subtitle: "Know what to do when you encounter them"
+                            )
+                        }
+                        
+                        // Subscription cards section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("UNLOCK FULL REPORT")
+                                .font(.system(size: 11, weight: .semibold))
+                                .tracking(1.2)
+                                .textCase(.uppercase)
+                                .foregroundStyle(Color(hex: "#888888"))
+                            
+                            // Two option cards
+                            HStack(spacing: 12) {
+                                // Card A - One-time purchase
+                                if let product = purchaseManager.oneTimePurchaseProduct {
+                                    PurchaseOptionCard(
+                                        badge: "THIS BUG",
+                                        price: product.displayPrice,
+                                        label: "One scan",
+                                        isSelected: selectedProductType == .oneTime
+                                    ) {
+                                        selectedProductType = .oneTime
+                                    }
+                                }
+                                
+                                // Card B - Subscription
+                                if let product = purchaseManager.subscriptionProduct {
+                                    PurchaseOptionCard(
+                                        badge: "ALL BUGS",
+                                        price: "\(product.displayPrice)/mo",
+                                        label: "Unlimited",
+                                        isSelected: selectedProductType == .subscription
+                                    ) {
+                                        selectedProductType = .subscription
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Error message
+                        if let error = errorMessage {
+                            Text(error)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(.red)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color.red.opacity(0.1))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        
+                        // Loading state message (if no products)
+                        if purchaseManager.products.isEmpty {
+                            VStack(spacing: 12) {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                
+                                Text("Loading subscription options...")
+                                    .font(.system(size: 14, weight: .regular))
+                                    .foregroundStyle(Color(white: 0.6))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
+                        }
+                        
+                        // Bottom button area (inside scroll view)
+                        VStack(spacing: 12) {
+                            // Main unlock button
+                            Button {
+                                Task { await purchase() }
+                            } label: {
+                                HStack(spacing: 8) {
+                                    if isPurchasing {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                                    } else {
+                                        Text("Unlock Now")
+                                            .font(.system(size: 17, weight: .bold))
+                                            .foregroundStyle(.black)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 56)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                            }
+                            .disabled(isPurchasing || purchaseManager.products.isEmpty)
+                            .opacity((isPurchasing || purchaseManager.products.isEmpty) ? 0.6 : 1.0)
+                            
+                            // Restore purchases
+                            Button {
+                                Task { await restore() }
+                            } label: {
+                                Text("Restore Purchases")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundStyle(Color(white: 0.6))
+                            }
+                            .disabled(isPurchasing)
+                            
+                            // Fine print + Terms link
+                            VStack(spacing: 8) {
+                                Text("Managed by App Store. Cancel anytime.")
+                                    .font(.system(size: 11, weight: .regular))
+                                    .foregroundStyle(Color(hex: "#444444"))
+                                    .multilineTextAlignment(.center)
+                                
+                                if let url = URL(string: Configuration.termsOfUseURL) {
+                                    Link("Terms of Use", destination: url)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(Color(white: 0.5))
+                                }
+                            }
+                        }
+                        .padding(.top, 8)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 40)
+                }
             }
-            .disabled(isPurchasing)
-            .scaleEffect(isPurchasing ? 0.97 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: isPurchasing)
-            
-            // Restore purchases
-            Button {
-                Task { await restore() }
-            } label: {
-                Text("Restore Purchases")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(Color(hex: "#888888"))
-                    .frame(maxWidth: .infinity)
-            }
-            .disabled(isPurchasing)
-            
-            // Fine print
-            Text("Managed by App Store. Cancel anytime.")
-                .font(.system(size: 11, weight: .regular))
-                .foregroundStyle(Color(hex: "#444444"))
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
         }
     }
+    
+    // MARK: - Helper Functions
     
     private func purchase() async {
         isPurchasing = true
@@ -296,6 +410,23 @@ struct PaywallView: View {
         
         do {
             try await purchaseManager.purchase(product)
+            
+            // Handle based on purchase type and context
+            if selectedProductType == .oneTime {
+                if let bugResult = currentBugResult {
+                    // Context: User is viewing a specific bug → Unlock THIS bug
+                    OneTimeUnlockManager.shared.unlockInsect(bugResult.id)
+                    print("[PaywallView] Unlocked specific insect: \(bugResult.commonName) (ID: \(bugResult.id))")
+                } else {
+                    // Context: User clicked from scan counter/profile → Add scan credit
+                    OneTimeUnlockManager.shared.addScanCredit()
+                    print("[PaywallView] Added 1 scan credit")
+                }
+                dismiss()
+            } else if selectedProductType == .subscription {
+                // Subscription unlocks everything
+                dismiss()
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -369,6 +500,35 @@ struct PurchaseOptionCard: View {
     
     private var badgeColor: Color {
         isSelected ? .white : Color(hex: "#666666")
+    }
+}
+
+// MARK: - Feature Row
+
+struct FeatureRow: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            // Icon
+            Image(systemName: icon)
+                .font(.system(size: 24, weight: .regular))
+                .foregroundStyle(.white)
+                .frame(width: 28, alignment: .leading)
+            
+            // Text
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.white)
+                
+                Text(subtitle)
+                    .font(.system(size: 15, weight: .regular))
+                    .foregroundStyle(Color(white: 0.6))
+            }
+        }
     }
 }
 
