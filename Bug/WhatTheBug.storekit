@@ -1,0 +1,68 @@
+{
+  "identifier" : "D4E8F7C2",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : false,
+      "internalID" : "6670001001",
+      "localizations" : [
+        {
+          "description" : "Unlock full analysis report for one bug",
+          "displayName" : "Single Bug Unlock",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.whatthebug.unlock.once",
+      "referenceName" : "Unlock Once",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6670000001",
+    "_developerTeamID" : "YOURTEAMID",
+    "_lastSynchronizedDate" : 731080935.06253099
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21527916",
+      "localizations" : [
+
+      ],
+      "name" : "WhatTheBug Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6670001002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlimited bug identifications with full analysis reports",
+              "displayName" : "WhatTheBug Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.whatthebug.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Pro Monthly",
+          "subscriptionGroupID" : "21527916",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
